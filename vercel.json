@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "cd sanskritisetu-prototype && npm install",
+  "buildCommand": "cd sanskritisetu-prototype && npm run build",
+  "outputDirectory": "sanskritisetu-prototype/dist"
+}

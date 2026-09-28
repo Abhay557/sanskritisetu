@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+/*
+  Shape rule (locked for the whole prototype):
+  panels      rounded-2xl (16px)
+  controls    rounded-lg  (8px)
+  tags        rounded-md  (6px)
+  One accent: sindoor #a63a22. Neutrals: stone only.
+*/
+
+@theme {
+  --font-display: "Rozha One", Georgia, serif;
+  --font-sans: "Mukta", system-ui, sans-serif;
+  --color-accent: #a63a22;
+  --color-accent-deep: #7e2c18;
+  --color-ink: #1c1917;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+.font-display {
+  font-family: "Rozha One", Georgia, serif;
+  letter-spacing: 0.005em;
+  text-wrap: balance;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: #f5d9cd;
+}
+
+/* Visible keyboard focus everywhere */
+:where(a, button, input, select):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Thin ink underline for text links */
+.u-link {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
+.print-only {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
