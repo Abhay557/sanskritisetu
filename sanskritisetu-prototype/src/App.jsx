@@ -8,10 +8,14 @@ import {
 } from '@phosphor-icons/react'
 import { FESTIVALS, BUNDLES, ARTISANS, PHCS, DTO_QUEUE, griMeta, riskLabel, inr } from './data/mock.js'
 import { GOV_PLACES, GOV_STATES, GOV_CATEGORIES, GOV_TOTAL, GOV_SOURCE } from './data/govTourism.js'
+import GovBar from './components/chrome/GovBar.jsx'
+import LandingView from './components/landing/LandingView.jsx'
+import MapPanel from './components/app/MapPanel.jsx'
 
 const ACCENT = '#a63a22'
 
 const TABS = [
+  { id: 'home', hi: 'घर', en: 'Home', icon: HouseLine },
   { id: 'radar', hi: 'खोज', en: 'Radar', icon: MagnifyingGlass },
   { id: 'event', hi: 'मेला', en: 'Ground file', icon: MapPin },
   { id: 'offline', hi: 'ऑफ़लाइन', en: 'Bundles', icon: DownloadSimple },
@@ -78,7 +82,7 @@ function EmptyState({ icon, title, body }) {
 
 export default function App() {
   const [role, setRole] = useState('traveler')
-  const [tab, setTab] = useState('radar')
+  const [tab, setTab] = useState('home')
   const [offline, setOffline] = useState(false)
   const [dateWin, setDateWin] = useState('30')
   const [query, setQuery] = useState('')
@@ -128,13 +132,15 @@ export default function App() {
   }, [query])
 
   return (
-    <div id="top" className="min-h-screen bg-white text-stone-900">
+    <div id="top" className="min-h-screen text-stone-900" style={{ background: '#fff9f0' }}>
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-stone-900 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white"
       >
         Skip to content
       </a>
+
+      <GovBar />
 
       {/* Utility bar */}
       <div className="no-print bg-stone-900 text-stone-100">
@@ -184,7 +190,7 @@ export default function App() {
         <div className="mx-auto flex max-w-6xl flex-wrap items-end gap-x-6 gap-y-2 px-4 pb-2 pt-4">
           <div>
             <div className="font-display text-2xl leading-none text-stone-900">
-              संस्कृति<span style={{ color: ACCENT }}>Setu</span>
+              <span lang="hi">संस्कृति</span><span style={{ color: ACCENT }}>Setu</span>
             </div>
             <div className="mt-1 text-[11px] font-bold tracking-[0.22em] text-stone-500">LIVING HERITAGE FIELD SYSTEM</div>
           </div>
@@ -196,13 +202,13 @@ export default function App() {
                   type="button"
                   onClick={() => setTab(t.id)}
                   aria-current={tab === t.id ? 'page' : undefined}
-                  className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold transition-colors active:scale-[0.98] ${
+                  className={`inline-flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold transition-colors active:scale-[0.98] ${
                     tab === t.id ? 'text-white' : 'text-stone-600 hover:bg-stone-100'
                   }`}
                   style={tab === t.id ? { background: ACCENT } : undefined}
                 >
                   <Icon C={t.icon} size={16} />
-                  {t.hi} <span className="font-semibold opacity-80">{t.en}</span>
+                  <span lang="hi">{t.hi}</span> <span className="font-semibold opacity-80">{t.en}</span>
                 </button>
               ))
             ) : (
@@ -219,6 +225,7 @@ export default function App() {
           <DtoView queue={queue} setQueue={setQueue} dtoMsg={dtoMsg} approveAll={approveAll} />
         ) : (
           <>
+            {tab === 'home' && <LandingView setTab={setTab} />}
             {tab === 'radar' && (
               <RadarView
                 query={query} setQuery={setQuery} dateWin={dateWin} setDateWin={setDateWin}
@@ -244,10 +251,29 @@ export default function App() {
         )}
 
         <footer className="mt-16 border-t border-stone-200 pt-6">
-          <div className="flex flex-wrap items-start gap-6">
+          <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-stone-200 p-4">
+            <img
+              src="/assets/gov/pm-modi-official.jpg"
+              alt="Official photograph of Prime Minister Narendra Modi"
+              width="96" height="96" loading="lazy"
+              className="h-16 w-16 rounded-lg object-cover"
+            />
+            <div className="min-w-[200px] flex-1">
+              <div className="text-sm font-bold text-stone-900">Prime Minister of India</div>
+              <p className="mt-0.5 max-w-[60ch] text-sm text-stone-600">
+                Official photograph, Prime Minister&apos;s Office. Tourism builds livelihoods —
+                this directory carries 4,003 district-listed places to the last mile.
+              </p>
+              <a href="https://www.pmindia.gov.in" target="_blank" rel="noreferrer" className="u-link mt-1 inline-block text-sm font-bold" style={{ color: ACCENT }}>
+                pmindia.gov.in
+              </a>
+            </div>
+            <img src="/assets/gov/emblem-india.svg" alt="State Emblem of India with motto Satyameva Jayate" width="30" height="48" loading="lazy" className="h-12 w-auto" />
+          </div>
+          <div className="flex flex-wrap items-start gap-6 pt-6">
             <div>
               <div className="font-display text-lg text-stone-900">
-                संस्कृति<span style={{ color: ACCENT }}>Setu</span>
+                <span lang="hi">संस्कृति</span><span style={{ color: ACCENT }}>Setu</span>
               </div>
               <p className="mt-1 max-w-[45ch] text-sm text-stone-600">
                 Guest is god. Built for the SIH demo from BRD-SIH2026-SS-01. Festival ground files are sample data.
@@ -278,6 +304,10 @@ export default function App() {
           </div>
           <p className="tnum mt-6 text-xs text-stone-500">
             Stack: FastAPI, PostGIS, Skyfield, MapLibre, SQLite-VSS, ExecuTorch, Bhashini, 112 NERS, NIDHI 2.0, Bhuvan.
+            Content: National Portal of India + district websites. Assets: see <span className="font-semibold">public/assets/gov/ATTRIBUTION.md</span>.
+          </p>
+          <p className="tnum mt-1 text-xs text-stone-500">
+            Last updated: 01 Oct 2026. Designed &amp; hosted on NIC lines — Digital India. For discrepancies contact the district administration.
           </p>
         </footer>
       </main>
@@ -403,7 +433,7 @@ function RadarView({ query, setQuery, dateWin, setDateWin, filtered, selId, setS
                           {String(i + 1).padStart(2, '0')} / {f.start} to {f.end}
                         </span>
                         <span className="font-display mt-0.5 block text-xl leading-snug text-stone-900">
-                          {f.name} <span className="text-base text-stone-500">{f.hindi}</span>
+                          {f.name} <span lang="hi" className="text-base text-stone-500">{f.hindi}</span>
                         </span>
                         <span className="mt-1 block text-sm text-stone-600">{f.state}. {f.lunarNote}.</span>
                         <span className="mt-2 flex flex-wrap gap-1.5">
@@ -494,7 +524,7 @@ function RadarView({ query, setQuery, dateWin, setDateWin, filtered, selId, setS
                 <button
                   type="button"
                   onClick={() => setGovVisible((v) => v + 24)}
-                  className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-stone-700 active:scale-[0.98]"
+                  className="min-h-[44px] rounded-lg bg-stone-900 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-stone-700 active:scale-[0.98]"
                 >
                   Show 24 more
                 </button>
@@ -503,7 +533,7 @@ function RadarView({ query, setQuery, dateWin, setDateWin, filtered, selId, setS
                 <button
                   type="button"
                   onClick={() => { setGovState(''); setGovCat(''); setQuery('') }}
-                  className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-bold transition-colors hover:border-stone-500 active:scale-[0.98]"
+                  className="min-h-[44px] rounded-lg border border-stone-300 px-4 py-2 text-sm font-bold transition-colors hover:border-stone-500 active:scale-[0.98]"
                 >
                   Reset filters
                 </button>
@@ -611,6 +641,10 @@ function EventView({ sel, setSelId }) {
             </p>
           </div>
 
+          <div className="mt-8">
+            <MapPanel place={sel} />
+          </div>
+
           <h3 className="mt-8 text-lg font-bold text-stone-900">Local etiquette</h3>
           <ol className="mt-3 space-y-2">
             {sel.etiquette.map((e, i) => (
@@ -699,7 +733,7 @@ function OfflineView({ downloaded, setDownloaded, offline }) {
             {phrases.map((p) => (
               <tr key={p.en}>
                 <td className="px-4 py-3 text-stone-900">{p.en}</td>
-                <td className="px-4 py-3 text-stone-600">{p.hi}. <span className="text-stone-500">{p.note}.</span></td>
+                <td className="px-4 py-3 text-stone-600"><span lang="hi">{p.hi}</span>. <span className="text-stone-500">{p.note}.</span></td>
               </tr>
             ))}
           </tbody>

@@ -9,11 +9,16 @@
 */
 
 @theme {
-  --font-display: "Rozha One", Georgia, serif;
-  --font-sans: "Mukta", system-ui, sans-serif;
+  --font-display: "Yatra One", "Rozha One", Georgia, serif;
+  --font-serif-in: "Rozha One", Georgia, serif;
+  --font-sans: "Baloo 2", "Mukta", system-ui, sans-serif;
   --color-accent: #a63a22;
   --color-accent-deep: #7e2c18;
-  --color-ink: #1c1917;
+  --color-ink: #2a2118;
+  --color-paper: #fff9f0;
+  --color-marigold: #e9a319;
+  --color-peacock: #0e6b6b;
+  --color-govnavy: #1a3a6b;
 }
 
 html {
@@ -21,15 +26,38 @@ html {
 }
 
 body {
-  background: #ffffff;
+  background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
 
 .font-display {
-  font-family: "Rozha One", Georgia, serif;
+  font-family: "Yatra One", "Rozha One", Georgia, serif;
   letter-spacing: 0.005em;
   text-wrap: balance;
+}
+
+.font-serif-in {
+  font-family: "Rozha One", Georgia, serif;
+}
+
+/* Heritage jaali lattice band (SVG data-uri, sandstone on ivory) */
+.jaali-band {
+  background-color: #f7ecd9;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23a63a22' stroke-opacity='0.22'%3E%3Cpath d='M28 4l6 12 14 2-10 10 2 14-12-6-12 6 2-14-10-10 14-2z'/%3E%3Ccircle cx='28' cy='28' r='3'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.rangoli-hr {
+  height: 10px;
+  background: linear-gradient(90deg, #a63a22 0 22%, #e9a319 22% 40%, #0e6b6b 40% 60%, #e9a319 60% 78%, #a63a22 78% 100%);
+  opacity: 0.85;
+}
+
+.osm-frame {
+  border: 1px solid #d6c7a8;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f7ecd9;
 }
 
 .tnum {
