@@ -74,7 +74,7 @@ export default function LandingView({ setTab }) {
       <section className="mt-8">
         <div className="mb-4 flex flex-wrap items-baseline gap-x-4">
           <h2 className="font-display text-3xl text-stone-900">This week on the directory</h2>
-          <button type="button" onClick={() => setTab('radar')} className="u-link ml-auto text-sm font-bold" style={{ color: ACCENT }}>
+          <button type="button" onClick={() => setTab('directory')} className="u-link ml-auto text-sm font-bold" style={{ color: ACCENT }}>
             Browse all {GOV_TOTAL.toLocaleString('en-IN')} →
           </button>
         </div>

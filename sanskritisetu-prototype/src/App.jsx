@@ -7,22 +7,42 @@ import {
   Wallet, Globe, CheckCircle,
 } from '@phosphor-icons/react'
 import { FESTIVALS, BUNDLES, ARTISANS, PHCS, DTO_QUEUE, griMeta, riskLabel, inr } from './data/mock.js'
-import { GOV_PLACES, GOV_STATES, GOV_CATEGORIES, GOV_TOTAL, GOV_SOURCE } from './data/govTourism.js'
+import { GOV_TOTAL } from './data/govTourism.js'
 import GovBar from './components/chrome/GovBar.jsx'
 import LandingView from './components/landing/LandingView.jsx'
 import MapPanel from './components/app/MapPanel.jsx'
+import GovDirectory from './components/app/GovDirectory.jsx'
+import About from './pages/About.jsx'
+import Help from './pages/Help.jsx'
+import NotFound from './pages/NotFound.jsx'
+import PlaceDetail from './pages/PlaceDetail.jsx'
+import { useRoute, tabHref } from './lib/router.js'
 
 const ACCENT = '#a63a22'
 
-const TABS = [
-  { id: 'home', hi: 'घर', en: 'Home', icon: HouseLine },
-  { id: 'radar', hi: 'खोज', en: 'Radar', icon: MagnifyingGlass },
-  { id: 'event', hi: 'मेला', en: 'Ground file', icon: MapPin },
-  { id: 'offline', hi: 'ऑफ़लाइन', en: 'Bundles', icon: DownloadSimple },
-  { id: 'transit', hi: 'यात्रा', en: 'Transit', icon: Bus },
-  { id: 'market', hi: 'बाज़ार', en: 'Market', icon: Storefront },
-  { id: 'sos', hi: 'रक्षा', en: 'SOS', icon: Siren },
+const NAV = [
+  { tab: 'home', hi: 'घर', en: 'Home', icon: HouseLine, href: '#/' },
+  { tab: 'radar', hi: 'खोज', en: 'Explore', icon: MagnifyingGlass, href: '#/explore' },
+  { tab: 'directory', hi: 'सूची', en: 'Directory', icon: MapPin, href: '#/directory' },
+  { tab: 'market', hi: 'बाज़ार', en: 'Market', icon: Storefront, href: '#/market' },
+  { tab: 'transit', hi: 'यात्रा', en: 'Plan', icon: Bus, href: '#/plan' },
+  { tab: 'offline', hi: 'ऑफ़लाइन', en: 'Offline', icon: DownloadSimple, href: '#/offline' },
+  { tab: 'sos', hi: 'रक्षा', en: 'Safety', icon: Siren, href: '#/safety' },
+  { tab: 'about', hi: 'परिचय', en: 'About', icon: Info, href: '#/about' },
 ]
+
+const TAB_BY_ROUTE = {
+  home: 'home', explore: 'radar', directory: 'directory', festival: 'event',
+  place: 'place', market: 'market', plan: 'transit', offline: 'offline',
+  safety: 'sos', about: 'about', help: 'help',
+}
+
+const PAGE_TITLES = {
+  home: 'Home', radar: 'Explore festivals', directory: 'Tourist directory',
+  event: 'Ground file', place: 'Place file', market: 'Marketplace', transit: 'Plan yatra',
+  offline: 'Offline bundles', sos: 'SOS and conduct', about: 'About', help: 'Help',
+  notfound: 'Not found',
+}
 
 function Icon({ C, size = 16, className = '' }) {
   return <C size={size} className={`shrink-0 ${className}`} aria-hidden="true" />
@@ -82,12 +102,23 @@ function EmptyState({ icon, title, body }) {
 
 export default function App() {
   const [role, setRole] = useState('traveler')
-  const [tab, setTab] = useState('home')
+  const route = useRoute()
+  const tab = TAB_BY_ROUTE[route.name] || 'notfound'
+  const go = (t, p) => { window.location.hash = tabHref(t, p) }
+  const isActiveNav = (n) =>
+    tab === n || (tab === 'event' && n === 'radar') || (tab === 'place' && n === 'directory')
   const [offline, setOffline] = useState(false)
   const [dateWin, setDateWin] = useState('30')
   const [query, setQuery] = useState('')
   const [selId, setSelId] = useState('bastar-madai')
-  const sel = useMemo(() => FESTIVALS.find((f) => f.id === selId), [selId])
+  useEffect(() => {
+    if (route.name === 'festival' && FESTIVALS.some((f) => f.id === route.param)) setSelId(route.param)
+  }, [route])
+  useEffect(() => {
+    document.title = `${PAGE_TITLES[tab] || 'Page'} — SanskritiSetu, Government Tourist Directory`
+  }, [tab])
+  const selValid = route.name !== 'festival' || FESTIVALS.some((f) => f.id === route.param)
+  const sel = useMemo(() => FESTIVALS.find((f) => f.id === selId) || FESTIVALS[0], [selId])
 
   const [downloaded, setDownloaded] = useState(() => {
     try {
@@ -196,20 +227,19 @@ export default function App() {
           </div>
           <nav aria-label="Primary" className="ml-auto flex gap-1 overflow-x-auto">
             {role === 'traveler' ? (
-              TABS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTab(t.id)}
-                  aria-current={tab === t.id ? 'page' : undefined}
+              NAV.map((t) => (
+                <a
+                  key={t.tab}
+                  href={t.href}
+                  aria-current={isActiveNav(t.tab) ? 'page' : undefined}
                   className={`inline-flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold transition-colors active:scale-[0.98] ${
-                    tab === t.id ? 'text-white' : 'text-stone-600 hover:bg-stone-100'
+                    isActiveNav(t.tab) ? 'text-white' : 'text-stone-600 hover:bg-stone-100'
                   }`}
-                  style={tab === t.id ? { background: ACCENT } : undefined}
+                  style={isActiveNav(t.tab) ? { background: ACCENT } : undefined}
                 >
                   <Icon C={t.icon} size={16} />
                   <span lang="hi">{t.hi}</span> <span className="font-semibold opacity-80">{t.en}</span>
-                </button>
+                </a>
               ))
             ) : (
               <span className="inline-flex items-center gap-1.5 rounded-lg bg-stone-100 px-3 py-2 text-sm font-bold text-stone-800">
@@ -225,14 +255,16 @@ export default function App() {
           <DtoView queue={queue} setQueue={setQueue} dtoMsg={dtoMsg} approveAll={approveAll} />
         ) : (
           <>
-            {tab === 'home' && <LandingView setTab={setTab} />}
+            {tab === 'home' && <LandingView setTab={go} />}
             {tab === 'radar' && (
               <RadarView
                 query={query} setQuery={setQuery} dateWin={dateWin} setDateWin={setDateWin}
-                filtered={filtered} selId={selId} setSelId={setSelId} setTab={setTab} offline={offline}
+                filtered={filtered} selId={selId} setSelId={setSelId} setTab={go} offline={offline}
               />
             )}
-            {tab === 'event' && <EventView sel={sel} setSelId={setSelId} />}
+            {tab === 'directory' && <GovDirectory initialQuery={query} indexLabel="02" />}
+            {tab === 'event' && (selValid ? <EventView sel={sel} setSelId={(id) => go('event', id)} /> : <NotFound />)}
+            {tab === 'place' && <PlaceDetail alias={route.param} />}
             {tab === 'offline' && <OfflineView downloaded={downloaded} setDownloaded={setDownloaded} offline={offline} />}
             {tab === 'transit' && (
               <TransitView
@@ -247,6 +279,9 @@ export default function App() {
                 sosPayload={sosPayload} sel={sel} sosSent={sosSent} setSosSent={setSosSent}
               />
             )}
+            {tab === 'about' && <About />}
+            {tab === 'help' && <Help />}
+            {tab === 'notfound' && <NotFound />}
           </>
         )}
 
@@ -302,6 +337,35 @@ export default function App() {
               </details>
             </div>
           </div>
+          <nav aria-label="Sitemap" className="mt-8 grid gap-6 rounded-2xl bg-stone-100 p-5 sm:grid-cols-3">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">Discover</div>
+              <ul className="mt-2 space-y-1.5 text-sm font-semibold">
+                <li><a href="#/" className="u-link text-stone-800">Home</a></li>
+                <li><a href="#/explore" className="u-link text-stone-800">Explore festivals</a></li>
+                <li><a href="#/directory" className="u-link text-stone-800">Tourist directory (4,003)</a></li>
+                <li><a href="#/market" className="u-link text-stone-800">Marketplace &amp; stays</a></li>
+              </ul>
+            </div>
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">Travel</div>
+              <ul className="mt-2 space-y-1.5 text-sm font-semibold">
+                <li><a href="#/plan" className="u-link text-stone-800">Plan yatra (cash &amp; permits)</a></li>
+                <li><a href="#/offline" className="u-link text-stone-800">Offline bundles</a></li>
+                <li><a href="#/safety" className="u-link text-stone-800">SOS &amp; conduct</a></li>
+                <li><a href="#/help" className="u-link text-stone-800">Help &amp; emergency</a></li>
+              </ul>
+            </div>
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">Government</div>
+              <ul className="mt-2 space-y-1.5 text-sm font-semibold">
+                <li><a href="#/about" className="u-link text-stone-800">About this prototype</a></li>
+                <li><a href="https://www.india.gov.in" target="_blank" rel="noreferrer" className="u-link text-stone-800">National Portal india.gov.in</a></li>
+                <li><a href="https://www.pmindia.gov.in" target="_blank" rel="noreferrer" className="u-link text-stone-800">PM India</a></li>
+                <li><a href="https://bhuvan.nrsc.gov.in/home/index.php" target="_blank" rel="noreferrer" className="u-link text-stone-800">Bhuvan (ISRO)</a></li>
+              </ul>
+            </div>
+          </nav>
           <p className="tnum mt-6 text-xs text-stone-500">
             Stack: FastAPI, PostGIS, Skyfield, MapLibre, SQLite-VSS, ExecuTorch, Bhashini, 112 NERS, NIDHI 2.0, Bhuvan.
             Content: National Portal of India + district websites. Assets: see <span className="font-semibold">public/assets/gov/ATTRIBUTION.md</span>.
@@ -318,21 +382,6 @@ export default function App() {
 /* ---------------- 01 RADAR ---------------- */
 function RadarView({ query, setQuery, dateWin, setDateWin, filtered, selId, setSelId, setTab, offline }) {
   const active = FESTIVALS.find((f) => f.id === selId) || filtered[0]
-  const [govState, setGovState] = useState('')
-  const [govCat, setGovCat] = useState('')
-  const [govVisible, setGovVisible] = useState(24)
-
-  const govFiltered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    return GOV_PLACES.filter((p) => {
-      if (govState && p.state !== govState) return false
-      if (govCat && !(p.categories || []).includes(govCat)) return false
-      if (!q) return true
-      return `${p.title} ${p.state} ${p.district} ${(p.categories || []).join(' ')}`.toLowerCase().includes(q)
-    })
-  }, [query, govState, govCat])
-
-  useEffect(() => { setGovVisible(24) }, [query, govState, govCat])
 
   return (
     <div>
@@ -376,30 +425,8 @@ function RadarView({ query, setQuery, dateWin, setDateWin, filtered, selId, setS
               : 'Online. Search runs on PostGIS with a Redis cache.'}
           </p>
           <p className="tnum mt-2 text-sm text-stone-600">
-            Window: {dateWin} days. 2,500 fairs indexed. Plus {GOV_TOTAL.toLocaleString('en-IN')} gov places.
+            Window: {dateWin} days. 2,500 fairs indexed. Plus {GOV_TOTAL.toLocaleString('en-IN')} gov places on the <a href="#/directory" className="u-link font-bold text-stone-800">directory page</a>.
           </p>
-          <div className="mt-4 grid gap-3">
-            <div>
-              <label htmlFor="gov-state" className="text-sm font-bold text-stone-800">Gov directory: state / UT</label>
-              <select
-                id="gov-state" value={govState} onChange={(e) => setGovState(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
-              >
-                <option value="">All {GOV_STATES.length} states / UTs</option>
-                {GOV_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="gov-cat" className="text-sm font-bold text-stone-800">Gov directory: category</label>
-              <select
-                id="gov-cat" value={govCat} onChange={(e) => setGovCat(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
-              >
-                <option value="">All categories</option>
-                {GOV_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-          </div>
         </div>
 
         <div className="lg:col-span-3">
@@ -416,7 +443,7 @@ function RadarView({ query, setQuery, dateWin, setDateWin, filtered, selId, setS
                   <li key={f.id}>
                     <button
                       type="button"
-                      onClick={() => { setSelId(f.id); setTab('event') }}
+                      onClick={() => setTab('event', f.id)}
                       className={`group grid w-full grid-cols-[auto_1fr_auto] items-start gap-4 px-2 py-4 text-left transition-colors hover:bg-stone-50 active:scale-[0.995] ${
                         isActive ? 'bg-stone-50' : ''
                       }`}
@@ -464,83 +491,9 @@ function RadarView({ query, setQuery, dateWin, setDateWin, filtered, selId, setS
         </div>
       </div>
 
-      {/* Government tourist directory from india.gov.in */}
+      {/* Government tourist directory from india.gov.in lives on its own page now */}
       <div className="mt-14 border-t border-stone-200 pt-8">
-        <div className="mb-6 max-w-2xl">
-          <div className="tnum text-sm font-bold text-stone-500">01B</div>
-          <h2 className="font-display mt-1 text-3xl leading-tight text-stone-900 md:text-4xl">Government tourist directory</h2>
-          <p className="mt-2 max-w-[65ch] text-base leading-relaxed text-stone-600">
-            <span className="tnum font-bold text-stone-900">{govFiltered.length.toLocaleString('en-IN')}</span> of{' '}
-            <span className="tnum font-bold text-stone-900">{GOV_TOTAL.toLocaleString('en-IN')}</span> places from{' '}
-            <a href={GOV_SOURCE} target="_blank" rel="noreferrer" className="u-link font-semibold text-stone-900">india.gov.in/explore-india/travel-and-tourism</a>.
-            Sourced from district websites. Same search box filters both lists. Images load lazily so the page stays fast.
-          </p>
-        </div>
-
-        {govFiltered.length === 0 ? (
-          <EmptyState
-            icon={MagnifyingGlass} title="No government places match"
-            body="Clear the search or reset the state and category filters to browse the full 4,003-place directory again."
-          />
-        ) : (
-          <>
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {govFiltered.slice(0, govVisible).map((p) => (
-                <li key={p.id} className="overflow-hidden rounded-2xl border border-stone-200 bg-white">
-                  <div className="aspect-[16/10] bg-stone-100">
-                    {p.image ? (
-                      <img src={p.image} alt="" loading="lazy" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="grid h-full w-full place-items-center text-stone-400">
-                        <Icon C={MapPin} size={28} />
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <div className="font-display text-lg leading-snug text-stone-900">{p.title}</div>
-                    <div className="mt-0.5 text-sm text-stone-600">{p.district}{p.district && p.state ? ', ' : ''}{p.state}</div>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {(p.categories || []).length === 0 ? <Tag>Gov listed</Tag> : p.categories.map((c) => <Tag key={c}>{c}</Tag>)}
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2 text-sm font-bold">
-                      <a href={p.details} target="_blank" rel="noreferrer" className="u-link inline-flex items-center gap-1" style={{ color: ACCENT }}>
-                        India.gov.in <Icon C={ArrowRight} size={14} />
-                      </a>
-                      {p.url && (
-                        <a href={p.url} target="_blank" rel="noreferrer" className="u-link inline-flex items-center gap-1 text-stone-700">
-                          District site <Icon C={ArrowRight} size={14} />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <p className="tnum text-sm text-stone-600">
-                Showing {Math.min(govVisible, govFiltered.length).toLocaleString('en-IN')} of {govFiltered.length.toLocaleString('en-IN')}
-              </p>
-              {govVisible < govFiltered.length && (
-                <button
-                  type="button"
-                  onClick={() => setGovVisible((v) => v + 24)}
-                  className="min-h-[44px] rounded-lg bg-stone-900 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-stone-700 active:scale-[0.98]"
-                >
-                  Show 24 more
-                </button>
-              )}
-              {(govState || govCat || query) && (
-                <button
-                  type="button"
-                  onClick={() => { setGovState(''); setGovCat(''); setQuery('') }}
-                  className="min-h-[44px] rounded-lg border border-stone-300 px-4 py-2 text-sm font-bold transition-colors hover:border-stone-500 active:scale-[0.98]"
-                >
-                  Reset filters
-                </button>
-              )}
-            </div>
-          </>
-        )}
+        <GovDirectory initialQuery={query} />
       </div>
     </div>
   )
@@ -557,6 +510,13 @@ function EventView({ sel, setSelId }) {
   ]
   return (
     <div>
+      <nav aria-label="Breadcrumb" className="no-print mb-4 flex flex-wrap items-center gap-2 text-sm font-semibold text-stone-600">
+        <a href="#/" className="u-link">Home</a>
+        <span aria-hidden="true">/</span>
+        <a href="#/explore" className="u-link">Explore</a>
+        <span aria-hidden="true">/</span>
+        <span className="text-stone-900">{sel.name}</span>
+      </nav>
       <SectionHead
         index="02"
         title={sel.name}
