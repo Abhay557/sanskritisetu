@@ -7,6 +7,7 @@ import {
   Wallet, Globe, CheckCircle,
 } from '@phosphor-icons/react'
 import { FESTIVALS, BUNDLES, ARTISANS, PHCS, DTO_QUEUE, griMeta, riskLabel, inr } from './data/mock.js'
+import { GOV_PLACES, GOV_STATES, GOV_CATEGORIES, GOV_TOTAL, GOV_SOURCE } from './data/govTourism.js'
 
 const ACCENT = '#a63a22'
 
@@ -249,7 +250,12 @@ export default function App() {
                 संस्कृति<span style={{ color: ACCENT }}>Setu</span>
               </div>
               <p className="mt-1 max-w-[45ch] text-sm text-stone-600">
-                Guest is god. Built for the SIH demo from BRD-SIH2026-SS-01. Sample data only.
+                Guest is god. Built for the SIH demo from BRD-SIH2026-SS-01. Festival ground files are sample data.
+                Tourist directory: 4,003 places scraped 2026-10-01 from{' '}
+                <a href="https://www.india.gov.in/explore-india/travel-and-tourism" target="_blank" rel="noreferrer" className="u-link font-semibold text-stone-800">
+                  india.gov.in/explore-india/travel-and-tourism
+                </a>{' '}
+                (National Portal of India, district websites).
               </p>
             </div>
             <div className="ml-auto flex flex-col gap-2 text-sm font-semibold">
@@ -282,12 +288,28 @@ export default function App() {
 /* ---------------- 01 RADAR ---------------- */
 function RadarView({ query, setQuery, dateWin, setDateWin, filtered, selId, setSelId, setTab, offline }) {
   const active = FESTIVALS.find((f) => f.id === selId) || filtered[0]
+  const [govState, setGovState] = useState('')
+  const [govCat, setGovCat] = useState('')
+  const [govVisible, setGovVisible] = useState(24)
+
+  const govFiltered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return GOV_PLACES.filter((p) => {
+      if (govState && p.state !== govState) return false
+      if (govCat && !(p.categories || []).includes(govCat)) return false
+      if (!q) return true
+      return `${p.title} ${p.state} ${p.district} ${(p.categories || []).join(' ')}`.toLowerCase().includes(q)
+    })
+  }, [query, govState, govCat])
+
+  useEffect(() => { setGovVisible(24) }, [query, govState, govCat])
+
   return (
     <div>
       <SectionHead
         index="01"
         title="Cultural radar, 365 days"
-        lede="Pick a travel window and see living festivals across 28 states and 8 union territories. Lunar dates reconcile on their own, so officers never type them by hand."
+        lede={`Pick a travel window and see living festivals across 28 states and 8 union territories. Lunar dates reconcile on their own, so officers never type them by hand. Backed by ${GOV_TOTAL.toLocaleString('en-IN')} government-listed tourist places from the National Portal of India.`}
       />
       <div className="grid gap-8 lg:grid-cols-5">
         <div className="lg:col-span-2">
@@ -300,7 +322,7 @@ function RadarView({ query, setQuery, dateWin, setDateWin, filtered, selId, setS
             </span>
             <input
               id="radar-q" value={query} onChange={(e) => setQuery(e.target.value)}
-              placeholder="Try Bastar, sumo, Losar"
+              placeholder="Try Bastar, fort, Kerala, Religious"
               className="w-full rounded-lg border border-stone-300 bg-white py-2.5 pl-10 pr-3 text-sm placeholder:text-stone-400"
             />
           </div>
@@ -324,8 +346,30 @@ function RadarView({ query, setQuery, dateWin, setDateWin, filtered, selId, setS
               : 'Online. Search runs on PostGIS with a Redis cache.'}
           </p>
           <p className="tnum mt-2 text-sm text-stone-600">
-            Window: {dateWin} days. 2,500 fairs indexed.
+            Window: {dateWin} days. 2,500 fairs indexed. Plus {GOV_TOTAL.toLocaleString('en-IN')} gov places.
           </p>
+          <div className="mt-4 grid gap-3">
+            <div>
+              <label htmlFor="gov-state" className="text-sm font-bold text-stone-800">Gov directory: state / UT</label>
+              <select
+                id="gov-state" value={govState} onChange={(e) => setGovState(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="">All {GOV_STATES.length} states / UTs</option>
+                {GOV_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="gov-cat" className="text-sm font-bold text-stone-800">Gov directory: category</label>
+              <select
+                id="gov-cat" value={govCat} onChange={(e) => setGovCat(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="">All categories</option>
+                {GOV_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
         </div>
 
         <div className="lg:col-span-3">
@@ -337,7 +381,7 @@ function RadarView({ query, setQuery, dateWin, setDateWin, filtered, selId, setS
           ) : (
             <ol className="divide-y divide-stone-200 border-y border-stone-200">
               {filtered.map((f, i) => {
-                const isActive = f.id === active.id
+                const isActive = active && f.id === active.id
                 return (
                   <li key={f.id}>
                     <button
@@ -388,6 +432,85 @@ function RadarView({ query, setQuery, dateWin, setDateWin, filtered, selId, setS
             </div>
           )}
         </div>
+      </div>
+
+      {/* Government tourist directory from india.gov.in */}
+      <div className="mt-14 border-t border-stone-200 pt-8">
+        <div className="mb-6 max-w-2xl">
+          <div className="tnum text-sm font-bold text-stone-500">01B</div>
+          <h2 className="font-display mt-1 text-3xl leading-tight text-stone-900 md:text-4xl">Government tourist directory</h2>
+          <p className="mt-2 max-w-[65ch] text-base leading-relaxed text-stone-600">
+            <span className="tnum font-bold text-stone-900">{govFiltered.length.toLocaleString('en-IN')}</span> of{' '}
+            <span className="tnum font-bold text-stone-900">{GOV_TOTAL.toLocaleString('en-IN')}</span> places from{' '}
+            <a href={GOV_SOURCE} target="_blank" rel="noreferrer" className="u-link font-semibold text-stone-900">india.gov.in/explore-india/travel-and-tourism</a>.
+            Sourced from district websites. Same search box filters both lists. Images load lazily so the page stays fast.
+          </p>
+        </div>
+
+        {govFiltered.length === 0 ? (
+          <EmptyState
+            icon={MagnifyingGlass} title="No government places match"
+            body="Clear the search or reset the state and category filters to browse the full 4,003-place directory again."
+          />
+        ) : (
+          <>
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {govFiltered.slice(0, govVisible).map((p) => (
+                <li key={p.id} className="overflow-hidden rounded-2xl border border-stone-200 bg-white">
+                  <div className="aspect-[16/10] bg-stone-100">
+                    {p.image ? (
+                      <img src={p.image} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="grid h-full w-full place-items-center text-stone-400">
+                        <Icon C={MapPin} size={28} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <div className="font-display text-lg leading-snug text-stone-900">{p.title}</div>
+                    <div className="mt-0.5 text-sm text-stone-600">{p.district}{p.district && p.state ? ', ' : ''}{p.state}</div>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {(p.categories || []).length === 0 ? <Tag>Gov listed</Tag> : p.categories.map((c) => <Tag key={c}>{c}</Tag>)}
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2 text-sm font-bold">
+                      <a href={p.details} target="_blank" rel="noreferrer" className="u-link inline-flex items-center gap-1" style={{ color: ACCENT }}>
+                        India.gov.in <Icon C={ArrowRight} size={14} />
+                      </a>
+                      {p.url && (
+                        <a href={p.url} target="_blank" rel="noreferrer" className="u-link inline-flex items-center gap-1 text-stone-700">
+                          District site <Icon C={ArrowRight} size={14} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <p className="tnum text-sm text-stone-600">
+                Showing {Math.min(govVisible, govFiltered.length).toLocaleString('en-IN')} of {govFiltered.length.toLocaleString('en-IN')}
+              </p>
+              {govVisible < govFiltered.length && (
+                <button
+                  type="button"
+                  onClick={() => setGovVisible((v) => v + 24)}
+                  className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-stone-700 active:scale-[0.98]"
+                >
+                  Show 24 more
+                </button>
+              )}
+              {(govState || govCat || query) && (
+                <button
+                  type="button"
+                  onClick={() => { setGovState(''); setGovCat(''); setQuery('') }}
+                  className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-bold transition-colors hover:border-stone-500 active:scale-[0.98]"
+                >
+                  Reset filters
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
